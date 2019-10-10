@@ -1,5 +1,8 @@
 #include <Windows.h>
 
+#define DRAW_LINE 1
+#define BRUSH 2
+
 HINSTANCE _hInstance; // 인스턴스 핸들 
 	// (윈도우 운영체제에서 실행되는 프로그램들을 구별하기 위한 ID값)
 HWND _hWnd; // 핸들 윈도우 약자, 윈도우의 핸들 번호를 지정해서 사용
@@ -68,24 +71,65 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	PAINTSTRUCT ps; // 윈도우 클라이언트 영역을 그리는데 필요한 정보를 담고있는 구조체
 		// ㄴ 그리는 속도를 비약적으로 상승시킴
 
+	int mode = BRUSH;
 	switch (iMessage)
 	{
+	
 	case WM_PAINT: // 윈도우 화면에서 그림이나 문자를 띄워주는 영역
-		hdc = BeginPaint(hWnd, &ps); // 그릴 화면 선택
+		if (mode == DRAW_LINE) {
+			hdc = BeginPaint(hWnd, &ps); // 그릴 화면 선택
 
-		MoveToEx(hdc, 100, 100, NULL); // 좌표 설정
+			MoveToEx(hdc, 100, 100, NULL); // 좌표 설정
 
-		Ellipse(hdc, 0, 0, 500, 500); // 원 그리기
+			Ellipse(hdc, 0, 0, 500, 500); // 원 그리기
 
-		Rectangle(hdc, 100, 100, 400, 400); // 네모 그리기
+			Rectangle(hdc, 100, 100, 400, 400); // 네모 그리기
 
-		LineTo(hdc, 200, 200); // 선 그리고 좌표이동
-		LineTo(hdc, 300, 100);
-		LineTo(hdc, 100, 500);
+			LineTo(hdc, 200, 200); // 선 그리고 좌표이동
+			LineTo(hdc, 300, 100);
+			LineTo(hdc, 100, 500);
 
-		EndPaint(hWnd, &ps);
+			EndPaint(hWnd, &ps);
+		}
+		else if (mode == BRUSH) {
+			hdc = BeginPaint(hWnd, &ps);
+
+			// 단색 브러쉬를 생성하며 브러쉬 색상만 인수로 지정
+			HBRUSH brush = CreateSolidBrush(RGB(200, 100, 50));
+
+			// 브러쉬 백업
+			HBRUSH oldBrush = (HBRUSH)SelectObject(hdc, brush);
+
+			// 설정된 사각형 그리기
+			Rectangle(hdc, 100, 100, 200, 200);
+
+			SelectObject(hdc, oldBrush); // 기존 브러쉬 선택
+
+			DeleteObject(brush); // 브러쉬 제거
+
+			HBRUSH brush2 = CreateSolidBrush(RGB(0, 255, 150));
+			HBRUSH oldBrush2 = (HBRUSH)SelectObject(hdc, brush);
+			SelectObject(hdc, brush2);
+			Rectangle(hdc, 200, 200, 300, 300);
+			SelectObject(hdc, oldBrush2);
+			DeleteObject(brush2);
+
+			// 펜 생성 (펜 모양, 펜 굵기. 펜 색상)
+			HPEN pen = CreatePen(PS_DASH, 1, RGB(255, 0, 0));
+			HPEN oldPen = (HPEN)SelectObject(hdc, pen);
+			MoveToEx(hdc, 50, 100, NULL);
+			LineTo(hdc, 500, 400);
+			SelectObject(hdc, oldPen);
+			DeleteObject(pen);
+
+			SetPixel(hdc, 50, 50, RGB(0, 0, 255));
+
+			for (int i = 0; i < 100; i++) {
+				SetPixel(hdc, 50 + i, 50 + i, RGB(0, 255, 0));
+			}
+		}
 		break;
-
+		
 	case WM_DESTROY:
 		PostQuitMessage(0); // 윈도우창 삭제
 		break;
